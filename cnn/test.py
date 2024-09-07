@@ -7,9 +7,9 @@ from torchvision.datasets import mnist
 
 test_data = mnist.MNIST('data/mnist', train=False, transform=torchvision.transforms.ToTensor(), download=False)
 
-device = torch.device("cuda")
+device = torch.device("mps")
 model = CNN(1, 10).to(device)
-model.load_state_dict(torch.load("CCNN1.pt"), strict=False)
+model.load_state_dict(torch.load("CCNN_MAC.pt"), strict=False)
 model.eval()
 
 test_x = torch.unsqueeze(test_data.data, dim=1).type(torch.FloatTensor)[:10]/255.

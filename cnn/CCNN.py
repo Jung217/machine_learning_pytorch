@@ -20,7 +20,7 @@ plt.imshow(train_data.data[0].numpy(), cmap='gray')
 plt.show()
 
 # 設定設備和模型
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = torch.device('mps' if torch.cuda.is_available() else 'cpu')
 model = CNN(1, 10).to(device)
 loss_f = nn.CrossEntropyLoss()
 opt = optim.Adam(model.parameters(), lr=1e-3)
@@ -87,4 +87,4 @@ for epoch in range(3):
     print(f'Test Loss: {test_loss:.4f}, Test Accuracy: {test_acc:.4f}')
 
 # 儲存模型
-torch.save( model.state_dict(), 'CCNN1.pt')
+torch.save( model.state_dict(), 'CCNN_MAC.pt')

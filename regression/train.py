@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader, random_split
 
 batch_size = 32
 lr = 1e-3
-epochs = 300
+epochs = 50
 
 df = pd.read_csv("covid_train.csv", header=0)
 df = df.to_numpy(dtype = np.float32)
@@ -25,7 +25,7 @@ train_loader = DataLoader(train_data, batch_size=batch_size)
 val_loader = DataLoader(val_data, batch_size=batch_size)
 test_loader = DataLoader(test_data, batch_size=batch_size)
 
-device = torch.device("cuda")
+device = torch.device("mps")
 model = regression(87, 1).to(device)
 cirterion = nn.MSELoss()
 opt = optim.Adagrad(model.parameters(), lr=lr)
@@ -45,7 +45,7 @@ def train(epoch):
         loss.backward()
         opt.step()
 
-        if (epoch+1) % 100 == 0: torch.save(model.state_dict(), 'pt/regression_{}.pt'.format(epoch))
+        if (epoch+1) % 50 == 0: torch.save(model.state_dict(), 'pt/regression_{}.pt'.format(epoch))
     print("train epoch:{}, loss:{:.6f}".format(epoch+1, losses/len(train_loader)))
     return losses/len(train_loader)
 

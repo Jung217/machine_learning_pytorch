@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from model import regression
 
-device = torch.device("cuda")
+device = torch.device("mps")
 
 df = pd.read_csv("covid_test.csv", header=0)
 df = df.to_numpy(dtype = np.float32)
@@ -12,7 +12,7 @@ data = df[:,1:]
 data = torch.from_numpy(data).to(device)
 
 model = regression(87, 1).to(device)
-model.load_state_dict(torch.load("pt/regression_299.pt"))
+model.load_state_dict(torch.load("pt/regression_299.pt", weights_only=True))
 model.eval()
 
 pred = []
