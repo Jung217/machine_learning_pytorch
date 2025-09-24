@@ -112,5 +112,6 @@ arch_txt = os.path.join(MODELS, "model_arch.txt")
 with open(arch_txt, "w", encoding="utf-8") as f:
     f.write(str(model) + "\n")
     f.write(f"trainable parameters : {count_trainable_params(model)}\n")
+print(f"->saved structure describe:{arch_txt}")
 print("STEP 5 finished\n")
 
