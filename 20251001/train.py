@@ -96,8 +96,8 @@ def main():
                 val_loss += loss.item() * bs
                 val_acc += (logits.argmax(1)==labels).float().sum().item()
                 m += bs
-            val_loss += m
-            val_acc += m
+            val_loss /= m
+            val_acc /= m
         with open(loss_csv, 'a', encoding='utf-8') as f:
             f.write(f'{epoch}, {train_loss:.6f}, {val_loss:.6f}, {train_acc:.4f}, {val_acc:.4f}\n')
 
@@ -119,3 +119,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
