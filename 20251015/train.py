@@ -1,23 +1,9 @@
 import torch
 import torch.nn as nn
 import numpy as np
+from rnn import SimpleRNN
 import matplotlib.pyplot as plt
 from torch.utils.data import TensorDataset, DataLoader
-
-class SimpleRNN(nn.Module):
-    def __init__(self, input_size, hidden_size, num_layers, output_size):
-        super(SimpleRNN, self).__init__()
-        self.hidden_size = hidden_size
-        self.num_layers = num_layers
-        
-        self.rnn = nn.RNN(input_size, hidden_size, num_layers, batch_first=True)
-        self.fc = nn.Linear(hidden_size, output_size)
-
-    def forward(self, x):
-        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(x.device)
-        out, h_n = self.rnn(x, h0)
-        out = self.fc(out)
-        return out, h_n
 
 print("-" * 60)
 print("RNN訓練程式 - 使用正弦波資料")
@@ -33,6 +19,7 @@ LEARNING_RATE = 0.001
 BATCH_SIZE = 32
 NUM_SAMPLES = 1000
 
+print(f"\nHyperparameters:")
 print(f"序列長度: {SEQUENCE_LENGTH}")
 print(f"隱藏層大小: {HIDDEN_SIZE}")
 print(f"訓練回合: {NUM_EPOCHS}")
@@ -67,6 +54,7 @@ def generate_sine_wave_data(num_samples, sequence_length):
     return X, y
 
 X_train, y_train = generate_sine_wave_data(NUM_SAMPLES, SEQUENCE_LENGTH)
+
 print("訓練資料形狀：")
 print(f"輸入 X: {X_train.shape} (樣本數, 序列長度, 特徵數)")
 print(f"目標 y: {y_train.shape} (樣本數, 輸出數)")
@@ -144,17 +132,17 @@ with torch.no_grad():
     output, _ = model(test_X)
     predictions = output[:, -1, :].numpy()
 
-plt.figure(figsize=(12, 5))
-plt.plot(test_y.numpy(), 'b.-', label='True', linewidth=2)
-plt.plot(predictions, 'r.--', label='Predicted', linewidth=2)
-plt.title("RNN Prediction vs True Values", fontsize=14)
-plt.xlabel("Sample Index", fontsize=12)
-plt.ylabel("Value", fontsize=12)
-plt.legend(fontsize=11)
-plt.grid(True, alpha=0.3)
-plt.tight_layout()
-plt.savefig("prediction_result.png", dpi=150)
-print("預測結果圖已儲存為: prediction_result.png")
+    plt.figure(figsize=(12, 5))
+    plt.plot(test_y.numpy(), 'b.-', label='True', linewidth=2)
+    plt.plot(predictions, 'r.--', label='Predicted', linewidth=2)
+    plt.title("RNN Prediction vs True Values", fontsize=14)
+    plt.xlabel("Sample Index", fontsize=12)
+    plt.ylabel("Value", fontsize=12)
+    plt.legend(fontsize=11)
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.savefig("prediction_result.png", dpi=150)
+    print("預測結果圖已儲存為: prediction_result.png")
 
 print("\n" + "-" * 60)
 print("所有訓練流程完成！")
