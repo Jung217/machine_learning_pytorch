@@ -7,8 +7,11 @@ import numpy as np
 import os
 import pandas as pd
 
-CSV_path = "./datasets3/cifar10_folders"
-imges_dir = "./datasets3/cifar10_folders/img"
+data_root = "./datasets3/cifar10_folders"
+imges_dir = os.path.join(data_root, 'images')
+os.makedirs(imges_dir, exist_ok=True)
+
+CSV_path = os.path.join(data_root, 'label.csv')
 
 if not os.path.exists(CSV_path):
     cifar_dataset = torchvision.datasets.CIFAR10(
