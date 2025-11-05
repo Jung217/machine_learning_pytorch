@@ -4,7 +4,7 @@ import math
 
 def scaled_dot_product_attention(q, k, v, mask=None):
     d_k = q.size(-1)
-    scores = torch.matumul(q, k.transpose(-2, -1)) / math.sqrt(d_k)
+    scores = torch.matmul(q, k.transpose(-2, -1)) / math.sqrt(d_k)
     if mask is not None: scores = scores.masked_fill(mask==0, -1e9)
     attn_weights = F.softmax(scores, dim=-1)
     output = torch.matmul(attn_weights, v)
@@ -28,4 +28,5 @@ print("K shape:", k.shape)
 print("V shape:", v.shape)
 
 print("Output shape:", output.shape)
+
 print("Weights shape:", weights.shape)
