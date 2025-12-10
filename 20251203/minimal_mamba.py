@@ -26,15 +26,17 @@ class MambaBlock(nn.Module):
         self.in_proj = nn.Linear(self.d_model, self.d_inner * 2, bias=False)
 
         self.conv1d = nn.Conv1d(
-        in_channels=self.d_inner,
-        out_channels=self.d_inner,
-        kernel_size=d_conv,
-        bias=True,
-        groups=self.d_inner, # 深度可分離卷積
-        padding=d_conv - 1,
+            in_channels=self.d_inner,
+            out_channels=self.d_inner,
+            kernel_size=d_conv,
+            bias=True,
+            groups=self.d_inner,
+            padding=d_conv - 1,
         )
 
-        self.x_proj = nn.Linear(self.d_inner, self.d_state + self.d_model * 2, bias=False)
+        # self.x_proj = nn.Linear(self.d_inner, self.d_state + self.d_model * 2, bias=False)
+        self.x_proj = nn.Linear(self.d_inner, self.d_state * 3, bias=False)
+
         self.dt_proj = nn.Linear(self.d_state, self.d_inner, bias=True)
 
         A = torch.arange(1, self.d_state + 1, dtype=torch.float32).repeat(self.d_inner, 1)
@@ -49,9 +51,9 @@ class MambaBlock(nn.Module):
         xz = self.in_proj(x)
         x, z = xz.chunk(2, dim=-1)
 
-        x = x.transpose(1, 2) # (B, E, L)
+        x = x.transpose(1, 2)
         x = self.conv1d(x)[:, :, :seq_len]
-        x = x.transpose(1, 2) # (B, L, E)
+        x = x.transpose(1, 2)
         x = F.silu(x)
 
         y = self.ssm(x)
@@ -63,13 +65,15 @@ class MambaBlock(nn.Module):
         return y
 
     def ssm(self, x):
-        A = -torch.exp(self.A_log.float()) # (E, N)
+        A = -torch.exp(self.A_log.float())
         D = self.D.float()
 
-        x_dbl = self.x_proj(x) # (B, L, dt_rank + 2*N)
-        delta, B, C = x_dbl.split([self.d_state, self.d_model, self.d_model], dim=-1)
+        x_dbl = self.x_proj(x) 
+        
+        # 這裡 split 需要 x_dbl 的最後一維是 3 * d_state (即 48)
+        delta, B, C = x_dbl.split([self.d_state, self.d_state, self.d_state], dim=-1)
 
-        delta = F.softplus(self.dt_proj(delta)) # (B, L, E)
+        delta = F.softplus(self.dt_proj(delta))
 
         y = self.selective_scan(x, delta, A, B, C, D)
 
@@ -79,19 +83,19 @@ class MambaBlock(nn.Module):
         batch_size, seq_len, d_inner = u.shape
         d_state = A.shape[1]
 
-        delta_A = torch.exp(delta.unsqueeze(-1) * A) # (B, L, E, N)
-        delta_B_u = (delta.unsqueeze(-1) * B.unsqueeze(2) * u.unsqueeze(-1)) # (B, L, E, N)
+        delta_A = torch.exp(delta.unsqueeze(-1) * A) 
+        delta_B_u = (delta.unsqueeze(-1) * B.unsqueeze(2) * u.unsqueeze(-1)) 
 
-        h = torch.zeros(batch_size, d_inner, d_state, device=u.device) # (B, E, N)
+        h = torch.zeros(batch_size, d_inner, d_state, device=u.device)
         ys = []
 
         for i in range(seq_len):
             h = delta_A[:, i] * h + delta_B_u[:, i]
-            y = (h @ C[:, i, :].unsqueeze(-1)).squeeze(-1) # (B, E)
+            y = (h @ C[:, i, :].unsqueeze(-1)).squeeze(-1)
             ys.append(y)
 
-        y = torch.stack(ys, dim=1) # (B, L, E)
-        y = y + u * D # (B, L, E)
+        y = torch.stack(ys, dim=1)
+        y = y + u * D
 
         return y
 
